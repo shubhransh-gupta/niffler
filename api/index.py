@@ -43,15 +43,19 @@ class handler(BaseHTTPRequestHandler):
         if not route or route == "health":
             return self._send_json({"status": "healthy", "service": "Niffler API", "version": "0.2.0"})
 
-        # 1. Flight Search (Live Web + Gemini 4 Hydrogen Agent)
+        # 1. Flight Search (Skyscanner-Style Multi-Provider + Gemini 4 Hydrogen Agent)
         elif route == "flights":
             orig = qs.get("origin", ["DEL"])[0]
             dest = qs.get("destination", ["BLR"])[0]
             date = qs.get("date", [None])[0]
             direct = qs.get("direct", ["false"])[0].lower() == "true"
+            pax = int(qs.get("pax", ["1"])[0] or 1)
+            cabin = qs.get("cabin", ["E"])[0]
             with_meta = qs.get("with_meta", ["false"])[0].lower() == "true"
             if with_meta:
-                res = self.flight_radar.search_flights_with_agent(orig, dest, date, direct_only=direct)
+                res = self.flight_radar.search_flights_with_agent(
+                    orig, dest, date, direct_only=direct, pax=pax, cabin=cabin
+                )
                 return self._send_json({
                     "flights": [f.__dict__ for f in res["flights"]],
                     "origin": res["origin"],
@@ -168,12 +172,16 @@ class handler(BaseHTTPRequestHandler):
             )
             engine = BookingHandoffEngine(profile)
             b_type = data.get("type", "flight")
+            provider = str(data.get("provider") or "MakeMyTrip")
+            provider_url = str(data.get("provider_url") or "")
             if b_type == "hotel":
                 sess = engine.prepare_hotel_handoff(
                     data.get("hotel_name", "Hotel"),
                     data.get("city", "Goa"),
                     int(data.get("nights", 1)),
-                    int(data.get("price", 4500))
+                    int(data.get("price", 4500)),
+                    provider=provider,
+                    provider_url=provider_url,
                 )
             else:
                 sess = engine.prepare_flight_handoff(
@@ -181,7 +189,10 @@ class handler(BaseHTTPRequestHandler):
                     data.get("flight_number", "6E-2041"),
                     data.get("origin", "DEL"),
                     data.get("destination", "BLR"),
-                    int(data.get("fare", 4800))
+                    int(data.get("fare", 4800)),
+                    travel_date=data.get("travel_date"),
+                    provider=provider,
+                    provider_url=provider_url,
                 )
             return self._send_json(sess.__dict__)
 
