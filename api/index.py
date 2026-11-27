@@ -21,6 +21,7 @@ from niffler.travel.buses import BusRadar
 from niffler.travel.booking_handoff import BookingHandoffEngine
 from niffler.citizen.itr_optimizer import ITROptimizer
 from niffler.citizen.epf_explorer import EPFExplorer
+from niffler.agent import NifflerAgent
 
 OTP_SECRET = (os.getenv("OTP_SECRET") or os.getenv("GEMINI_API_KEY") or "niffler-otp-dev-key").encode("utf-8")
 
@@ -33,6 +34,7 @@ class handler(BaseHTTPRequestHandler):
     handoff_engine = BookingHandoffEngine()
     itr_optimizer = ITROptimizer()
     epf_explorer = EPFExplorer()
+    agent = NifflerAgent()
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -223,6 +225,12 @@ class handler(BaseHTTPRequestHandler):
                 "tax_savings_inr": res.tax_savings_inr,
                 "itr_1_json": res.itr_1_json
             })
+
+        elif route == "agent/chat":
+            msg = str(data.get("message", "")).strip()
+            history = data.get("history", [])
+            resp = self.agent.process_query(msg, history=history)
+            return self._send_json(resp)
 
         self.send_error(404, f"Route not found: {route}")
 

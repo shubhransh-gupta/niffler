@@ -23,6 +23,7 @@ from ..travel.buses import BusRadar
 from ..travel.booking_handoff import BookingHandoffEngine
 from ..citizen.itr_optimizer import ITROptimizer
 from ..citizen.epf_explorer import EPFExplorer
+from ..agent import NifflerAgent
 from ..config import NifflerConfig, BharatConfig, UserProfile
 
 
@@ -36,6 +37,7 @@ class NifflerAPIHandler(http.server.SimpleHTTPRequestHandler):
     handoff_engine = BookingHandoffEngine()
     itr_optimizer = ITROptimizer()
     epf_explorer = EPFExplorer()
+    agent = NifflerAgent()
 
     def __init__(self, *args, **kwargs):
         static_dir = Path(__file__).parent / "static"
@@ -217,6 +219,12 @@ class NifflerAPIHandler(http.server.SimpleHTTPRequestHandler):
                 "tax_savings_inr": res.tax_savings_inr,
                 "itr_1_json": res.itr_1_json
             })
+
+        elif route == "agent/chat":
+            msg = str(data.get("message", "")).strip()
+            history = data.get("history", [])
+            resp = self.agent.process_query(msg, history=history)
+            return self._send_json(resp)
 
         self.send_error(404, "Endpoint not found")
 

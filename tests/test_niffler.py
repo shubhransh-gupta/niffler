@@ -144,3 +144,27 @@ def test_epf_retirement_projection():
     )
     assert proj.years_to_grow == 30
     assert proj.projected_corpus_at_58_inr > 10000000  # Will be > 1 Crore with compounding
+
+
+def test_hotel_radar_destination_fallbacks():
+    radar = HotelRadar()
+    delhi_hotels = radar.search_hotels("Delhi")
+    assert len(delhi_hotels) > 0
+    assert any("delhi" in h.city.lower() or "delhi" in h.location.lower() for h in delhi_hotels)
+    assert not any("calangute" in h.location.lower() for h in delhi_hotels)
+
+    jaipur_hotels = radar.search_hotels("Jaipur")
+    assert len(jaipur_hotels) > 0
+    assert any("jaipur" in h.city.lower() or "jaipur" in h.location.lower() for h in jaipur_hotels)
+
+
+def test_niffler_agent():
+    from niffler.agent import NifflerAgent
+    agent = NifflerAgent()
+    resp_flt = agent.process_query("Find me cheapest flights from Delhi to Mumbai")
+    assert "reply" in resp_flt
+    assert resp_flt.get("action", {}).get("type") in ["SEARCH_FLIGHTS", "NONE"]
+
+    resp_tax = agent.process_query("How much tax can I save on 15 lakh salary?")
+    assert "reply" in resp_tax
+    assert resp_tax.get("action", {}).get("type") in ["CALC_ITR", "NONE"]

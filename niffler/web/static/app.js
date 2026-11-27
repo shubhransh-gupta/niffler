@@ -319,50 +319,76 @@ document.addEventListener("DOMContentLoaded", () => {
     const heroHeading = document.getElementById("hero-heading");
     const ctaBtn = document.getElementById("btn-search-travel");
     const sidebar = document.getElementById("ota-sidebar");
+    const workspace = document.querySelector(".ota-workspace");
     const sortBar = document.getElementById("nf-sort-bar");
     const insightBar = document.getElementById("deal-insight-bar");
     const orig = document.getElementById("travel-origin");
     const dest = document.getElementById("travel-dest");
     const subO = document.getElementById("sub-origin");
     const subD = document.getElementById("sub-dest");
+    const boxFrom = document.getElementById("box-from");
+    const swapBtn = document.getElementById("btn-swap-route");
+    const tripRadios = document.querySelector(".trip-type-row");
 
     if (currentTravelMode === "flights") {
       heroHeading.innerText = "Find the Lowest Airfares Across India & Beyond";
       ctaBtn.innerText = "SEARCH FLIGHTS";
       sidebar.style.display = "block";
+      if (workspace) workspace.classList.remove("no-sidebar");
       sortBar.style.display = "grid";
       insightBar.style.display = "flex";
+      if (boxFrom) boxFrom.style.display = "flex";
+      if (swapBtn) swapBtn.style.display = "inline-flex";
+      if (tripRadios) tripRadios.style.display = "flex";
       if (!orig.value) orig.value = "DEL";
       if (!dest.value) dest.value = "BLR";
+      document.getElementById("lbl-origin").innerText = "Origin";
+      document.getElementById("lbl-dest").innerText = "Destination";
       subO.innerText = "Origin Airport / City";
       subD.innerText = "Destination Airport / City";
     } else if (currentTravelMode === "hotels") {
       heroHeading.innerText = "Curated Stays, Boutique Villas & Resorts";
       ctaBtn.innerText = "FIND STAYS";
       sidebar.style.display = "none";
+      if (workspace) workspace.classList.add("no-sidebar");
       sortBar.style.display = "none";
       insightBar.style.display = "none";
-      dest.value = "GOA";
-      subO.innerText = "Guest City";
-      subD.innerText = "Destination City";
+      if (boxFrom) boxFrom.style.display = "none";
+      if (swapBtn) swapBtn.style.display = "none";
+      if (tripRadios) tripRadios.style.display = "none";
+      if (!dest.value || dest.value === "BLR") dest.value = "Goa";
+      document.getElementById("lbl-dest").innerText = "City / Destination";
+      subD.innerText = "Enter City (e.g. Goa, Jaipur, Mumbai, Delhi)";
     } else if (currentTravelMode === "trains") {
       heroHeading.innerText = "IRCTC Rail Schedules, Live Berths & Tatkal";
       ctaBtn.innerText = "FIND TRAINS";
       sidebar.style.display = "none";
+      if (workspace) workspace.classList.add("no-sidebar");
       sortBar.style.display = "none";
       insightBar.style.display = "none";
+      if (boxFrom) boxFrom.style.display = "flex";
+      if (swapBtn) swapBtn.style.display = "inline-flex";
+      if (tripRadios) tripRadios.style.display = "none";
       orig.value = "NDLS";
       dest.value = "MMCT";
+      document.getElementById("lbl-origin").innerText = "From Station";
+      document.getElementById("lbl-dest").innerText = "To Station";
       subO.innerText = "Origin Railway Station";
       subD.innerText = "Destination Railway Station";
     } else if (currentTravelMode === "buses") {
       heroHeading.innerText = "Intercity Electric & Volvo Sleeper Coaches";
       ctaBtn.innerText = "FIND COACHES";
       sidebar.style.display = "none";
+      if (workspace) workspace.classList.add("no-sidebar");
       sortBar.style.display = "none";
       insightBar.style.display = "none";
+      if (boxFrom) boxFrom.style.display = "flex";
+      if (swapBtn) swapBtn.style.display = "inline-flex";
+      if (tripRadios) tripRadios.style.display = "none";
       orig.value = "BLR";
       dest.value = "HYD";
+      document.getElementById("lbl-origin").innerText = "From City";
+      document.getElementById("lbl-dest").innerText = "To City";
       subO.innerText = "Boarding City";
       subD.innerText = "Dropping City";
     }
@@ -661,9 +687,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="gc-title">${h.name} &bull; ${h.property_type}</div>
             <div class="gc-sub">${h.location}, ${h.city} &bull; ${h.user_rating}/5.0 (${h.reviews_count.toLocaleString()} reviews)</div>
             <div class="gc-tags">
-              ${h.couple_friendly ? '<span class="gc-tag green">Couple Friendly</span>' : ''}
-              ${h.free_cancellation ? '<span class="gc-tag">Free Cancellation</span>' : ''}
-              ${(h.amenities || []).slice(0, 3).map(a => `<span class="gc-tag">${a}</span>`).join("")}
+              ${h.couple_friendly ? '<span class="gc-tag green">Couple Friendly</span> ' : ''}
+              ${h.free_cancellation ? '<span class="gc-tag">Free Cancellation</span> ' : ''}
+              ${(h.amenities || []).slice(0, 4).map(a => `<span class="gc-tag">${a}</span> `).join(" ")}
             </div>
           </div>
           <div class="price-col">
@@ -803,6 +829,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailInput = document.getElementById("m-input-email");
     const ageInput = document.getElementById("m-input-age");
     const chosenFare = selectedOffer ? selectedOffer.price_inr : (item.price_inr || item.price_per_night_inr);
+    const isOfficial = selectedOffer && selectedOffer.provider && selectedOffer.provider.toLowerCase().includes("official");
+    const convFee = isOfficial ? 0 : 350;
+    const taxesAmt = Math.max(Math.round(chosenFare * 0.12), 400);
+    const baseFare = Math.max(chosenFare - taxesAmt - convFee, 500);
 
     const payload = type === "hotel"
       ? {
@@ -823,7 +853,7 @@ document.addEventListener("DOMContentLoaded", () => {
           flight_number: item.flight_number,
           origin: item.origin,
           destination: item.destination,
-          fare: chosenFare,
+          fare: baseFare,
           travel_date: depInput.value,
           provider: selectedOffer ? selectedOffer.provider : "Official Airline",
           provider_url: selectedOffer ? selectedOffer.url : item.booking_url,
@@ -833,28 +863,30 @@ document.addEventListener("DOMContentLoaded", () => {
           passenger_age: parseInt(ageInput.value) || 28,
         };
 
-    const res = await fetch("/api/booking/handoff", {
+    document.getElementById("modal-item-title").innerHTML = type === "hotel"
+      ? `${item.name} &bull; ${item.city}`
+      : `${item.airline} (${item.flight_number}) &bull; ${item.origin} &rarr; ${item.destination}`;
+    document.getElementById("m-sess-id").innerText = activeModalContext.sessionId;
+    document.getElementById("m-provider-name").innerText = selectedOffer ? selectedOffer.provider : "Selected Provider";
+
+    document.getElementById("m-base-fare").innerText = `₹${baseFare.toLocaleString()}`;
+    document.getElementById("m-taxes").innerText = `₹${taxesAmt.toLocaleString()}`;
+    document.getElementById("m-conv-fee").innerText = `₹${convFee.toLocaleString()}`;
+    document.getElementById("m-total-amt").innerText = `₹${chosenFare.toLocaleString()}`;
+
+    const proceedBtn = document.getElementById("btn-proceed-provider");
+    const partnerUrl = (selectedOffer && selectedOffer.url) ? selectedOffer.url : (item.booking_url || "#");
+    proceedBtn.href = partnerUrl;
+    proceedBtn.innerText = `Proceed on ${selectedOffer ? selectedOffer.provider : "Provider"} →`;
+    document.getElementById("btn-autofill-bookmarklet").href = buildClientBookmarklet();
+    activeModalContext.checkoutUrl = partnerUrl;
+
+    // Asynchronously log session without blocking user navigation
+    fetch("/api/booking/handoff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-    });
-    const sess = await res.json();
-
-    document.getElementById("modal-item-title").innerHTML = sess.item_title;
-    document.getElementById("m-sess-id").innerText = sess.session_id;
-    document.getElementById("m-provider-name").innerText = sess.provider || "Selected Provider";
-
-    const baseFare = item.base_fare_inr > 0 ? item.base_fare_inr : sess.amount_inr;
-    const taxesAmt = item.taxes_inr > 0 ? item.taxes_inr : sess.taxes_inr;
-    document.getElementById("m-base-fare").innerText = `₹${baseFare.toLocaleString()}`;
-    document.getElementById("m-taxes").innerText = `₹${taxesAmt.toLocaleString()}`;
-    document.getElementById("m-conv-fee").innerText = `₹${sess.convenience_fee_inr.toLocaleString()}`;
-    document.getElementById("m-total-amt").innerText = `₹${chosenFare.toLocaleString()}`;
-
-    document.getElementById("btn-autofill-bookmarklet").href = sess.autofill_bookmarklet || buildClientBookmarklet();
-    document.getElementById("btn-goto-payment").href = sess.payment_gateway_url;
-    document.getElementById("btn-proceed-provider").innerText = `Proceed on ${sess.provider} →`;
-    activeModalContext.checkoutUrl = sess.provider_checkout_url || sess.payment_gateway_url;
+    }).catch(() => {});
   }
 
   async function openPaymentModal(type, item, preselectedIdx = 0) {
@@ -874,6 +906,7 @@ document.addEventListener("DOMContentLoaded", () => {
       type,
       item,
       selectedOffer: offers[preselectedIdx] || offers[0],
+      sessionId: `NF-${type === 'flight' ? 'FLT' : 'HTL'}-${Math.random().toString(16).substring(2, 10).toUpperCase()}`,
     };
 
     const listEl = document.getElementById("modal-provider-list");
@@ -904,15 +937,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  document.getElementById("btn-proceed-provider").addEventListener("click", async () => {
-    try {
-      await refreshBookingSession();
-      if (activeModalContext.checkoutUrl) {
-        window.open(activeModalContext.checkoutUrl, "_blank", "noopener");
-      }
-    } catch (e) {
-      alert("Checkout handoff failed: " + e.message);
-    }
+  document.getElementById("btn-proceed-provider").addEventListener("click", () => {
+    const dest = activeModalContext.selectedOffer ? activeModalContext.selectedOffer.provider : "Partner";
+    console.log(`[Niffler] Handoff proceeding to ${dest}.`);
   });
 
   document.getElementById("btn-close-modal").addEventListener("click", () => {
@@ -1003,6 +1030,113 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (e) {
       alert("EPF fetch error: " + e.message);
     }
+  });
+
+  // =========================================================================
+  // 7. Interactive Niffler AI Agent Controller
+  // =========================================================================
+  const agentDrawer = document.getElementById("ai-agent-drawer");
+  const openAgentBtn = document.getElementById("btn-open-agent");
+  const headerAgentBtn = document.getElementById("header-btn-agent");
+  const closeAgentBtn = document.getElementById("btn-close-agent");
+  const agentForm = document.getElementById("ai-agent-form");
+  const agentInput = document.getElementById("ai-agent-input");
+  const agentMessages = document.getElementById("ai-agent-messages");
+
+  function openAgentChat() {
+    if (agentDrawer) {
+      agentDrawer.classList.add("open");
+      if (agentInput) agentInput.focus();
+    }
+  }
+
+  function closeAgentChat() {
+    if (agentDrawer) agentDrawer.classList.remove("open");
+  }
+
+  if (openAgentBtn) openAgentBtn.addEventListener("click", openAgentChat);
+  if (headerAgentBtn) headerAgentBtn.addEventListener("click", openAgentChat);
+  if (closeAgentBtn) closeAgentBtn.addEventListener("click", closeAgentChat);
+
+  if (agentDrawer) {
+    agentDrawer.addEventListener("click", (e) => {
+      if (e.target === agentDrawer) closeAgentChat();
+    });
+  }
+
+  function appendAgentMessage(role, text) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `ai-msg ${role}`;
+    msgDiv.innerHTML = `<div class="ai-bubble">${text}</div>`;
+    agentMessages.appendChild(msgDiv);
+    agentMessages.scrollTop = agentMessages.scrollHeight;
+    return msgDiv;
+  }
+
+  async function handleAgentQuery(query) {
+    const q = query.trim();
+    if (!q) return;
+
+    appendAgentMessage("user", q);
+    const typingBubble = appendAgentMessage("bot", `<em>Thinking &amp; sniffing out live bargains...</em>`);
+
+    try {
+      const res = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: q }),
+      });
+      const data = await res.json();
+      typingBubble.innerHTML = `<div class="ai-bubble">${data.reply || "Done!"}</div>`;
+
+      // Handle autonomous action execution on behalf of user
+      if (data.action && data.action.type !== "NONE") {
+        const act = data.action;
+        if (act.type === "SEARCH_FLIGHTS") {
+          navTabs[0].click(); // Flights tab
+          if (act.origin) document.getElementById("travel-origin").value = act.origin;
+          if (act.destination) document.getElementById("travel-dest").value = act.destination;
+          if (act.date) depInput.value = act.date;
+          fetchTravelResults();
+        } else if (act.type === "SEARCH_HOTELS") {
+          const hotelTab = Array.from(navTabs).find(t => t.getAttribute("data-mode") === "hotels");
+          if (hotelTab) hotelTab.click();
+          if (act.city) document.getElementById("travel-dest").value = act.city;
+          fetchTravelResults();
+        } else if (act.type === "SEARCH_TRAINS") {
+          const trainTab = Array.from(navTabs).find(t => t.getAttribute("data-mode") === "trains");
+          if (trainTab) trainTab.click();
+          fetchTravelResults();
+        } else if (act.type === "CALC_ITR") {
+          const itrTab = Array.from(navTabs).find(t => t.getAttribute("data-section") === "itr");
+          if (itrTab) itrTab.click();
+          if (act.salary) document.getElementById("itr-salary").value = act.salary;
+          document.getElementById("btn-calc-itr").click();
+        } else if (act.type === "EXPLORE_EPF") {
+          const epfTab = Array.from(navTabs).find(t => t.getAttribute("data-section") === "epf");
+          if (epfTab) epfTab.click();
+          document.getElementById("btn-explore-epf").click();
+        }
+      }
+    } catch (e) {
+      typingBubble.innerHTML = `<div class="ai-bubble" style="color:#dc2626;">Error reaching AI agent: ${e.message}</div>`;
+    }
+  }
+
+  if (agentForm) {
+    agentForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = agentInput.value;
+      agentInput.value = "";
+      handleAgentQuery(val);
+    });
+  }
+
+  document.querySelectorAll(".ai-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      const prompt = chip.getAttribute("data-prompt");
+      if (prompt) handleAgentQuery(prompt);
+    });
   });
 
   // Initial load of live flights
