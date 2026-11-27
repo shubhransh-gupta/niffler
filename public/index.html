@@ -54,6 +54,9 @@
 
       <!-- Auth Area: Clean Guest Mode or Mobile OTP Login -->
       <div class="nf-nav-right" id="nav-auth-area">
+        <button type="button" class="nf-btn-agent-nav" id="header-btn-agent">
+          <span>⚡ Ask AI Agent</span>
+        </button>
         <button type="button" class="btn-login-otp" id="btn-open-login">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
           <span>Login / OTP</span>
@@ -495,15 +498,58 @@
           <div class="p-row total"><span>Estimated Payable</span><span id="m-total-amt"></span></div>
         </div>
 
-        <div class="modal-actions">
-          <button type="button" id="btn-proceed-provider" class="nf-btn-amber modal-cta">
-            Proceed to Checkout &rarr;
-          </button>
-          <a id="btn-goto-payment" href="#" target="_blank" class="nf-btn-outline modal-cta">
-            Direct Gateway View
-          </a>
         </div>
       </div>
+      <div class="modal-footer">
+        <a id="btn-proceed-provider" href="#" target="_blank" rel="noopener noreferrer" class="nf-btn-amber modal-cta-full">
+          Proceed on Selected Provider &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Niffler AI Agent FAB -->
+  <button id="btn-open-agent" class="ai-agent-fab" aria-label="Open Niffler AI Travel Assistant">
+    <span class="agent-fab-icon">⚡</span>
+    <span class="agent-fab-label">Ask Niffler AI</span>
+  </button>
+
+  <!-- Niffler AI Agent Chat Drawer -->
+  <div id="ai-agent-drawer" class="ai-agent-overlay">
+    <div class="ai-agent-card">
+      <div class="ai-agent-header">
+        <div class="ai-agent-title-wrap">
+          <div class="agent-avatar">🦔</div>
+          <div>
+            <h3>Niffler AI Assistant</h3>
+            <span class="agent-status-badge"><span class="status-dot"></span> Online &bull; Gemini Powered</span>
+          </div>
+        </div>
+        <button id="btn-close-agent" class="agent-close-btn">&times;</button>
+      </div>
+
+      <div class="ai-agent-messages" id="ai-agent-messages">
+        <div class="ai-msg bot">
+          <div class="ai-bubble">
+            <strong>Hi! I'm Niffler AI 🦔</strong><br>
+            I sniff out the lowest airfares, secret carrier deals, curated stays, IRCTC berths, and tax savings across India. What can I help you find or book today?
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-quick-prompts">
+        <button class="ai-chip" data-prompt="Find cheapest flights from Delhi to Mumbai">✈️ DEL &rarr; BOM Flights</button>
+        <button class="ai-chip" data-prompt="Curated hotels in Jaipur under 4000">🏨 Jaipur Stays</button>
+        <button class="ai-chip" data-prompt="How much tax will I save in New Regime for 12 lakh salary?">💰 Tax on ₹12L</button>
+        <button class="ai-chip" data-prompt="Can I withdraw EPF after 4 years of service?">🏦 EPF Withdrawal</button>
+      </div>
+
+      <form id="ai-agent-form" class="ai-agent-input-bar">
+        <input type="text" id="ai-agent-input" placeholder="Ask anything (e.g. 'Cheapest flights to Goa')..." autocomplete="off">
+        <button type="submit" id="ai-agent-send" class="ai-send-btn" aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </form>
     </div>
   </div>
 
