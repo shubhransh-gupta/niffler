@@ -86,9 +86,11 @@ class NifflerAgent:
 
         # 2. Robust programmatic fallback if LLM unreachable / rate-limited
         # Flight pattern: from X to Y or X to Y flights
-        flight_m = re.search(r"(?:from\s+)?([a-zA-Z\s]{3,15})\s+to\s+([a-zA-Z\s]{3,15})", low)
+        flight_m = re.search(r"(?:from\s+)([a-zA-Z\s]{3,15})\s+to\s+([a-zA-Z\s]{3,15})", low)
+        if not flight_m:
+            flight_m = re.search(r"\b([a-zA-Z]{3,15})\s+to\s+([a-zA-Z]{3,15})\s*(?:flights|flight|tickets|fares)?\b", low)
         if flight_m and any(w in low for w in ["flight", "fly", "airfare", "ticket", "cheap", "fare", "plane"]):
-            raw_o = flight_m.group(1).strip()
+            raw_o = flight_m.group(1).replace("flights", "").replace("flight", "").replace("from", "").strip()
             raw_d = flight_m.group(2).replace("flights", "").replace("flight", "").strip()
             o_code = city_to_code.get(raw_o, raw_o[:3].upper())
             d_code = city_to_code.get(raw_d, raw_d[:3].upper())
