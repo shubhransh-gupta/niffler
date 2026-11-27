@@ -3,88 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>goNiffler — Book Cheap Flights, Hotels, Trains, Bus & File ITR</title>
+  <title>Niffler — Smart Airfare Radar, Stays, Rail &amp; Citizen Tax</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- Goibibo-Style Sticky White Top Navbar -->
-  <header class="go-navbar">
-    <div class="go-nav-inner">
-      <div class="go-brand" id="brand-home">
-        <span class="brand-go">go</span><span class="brand-niffler">Niffler</span>
-        <span class="brand-coin" title="Sniffing out lowest fares">🪙</span>
+  <!-- Sticky Top Navigation -->
+  <header class="nf-navbar">
+    <div class="nf-nav-inner">
+      <div class="nf-brand" id="brand-home" title="Niffler Travel & Tax">
+        <span class="brand-emblem">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" fill="#f59e0b" stroke="#b45309"/>
+            <path d="M9.5 9.5h5M9.5 12h4M11 9.5c1.8 0 2.5 1 2.5 2.2 0 1.4-1 2.3-2.8 2.3L14 17" stroke="#fffbeb" stroke-width="1.8"/>
+          </svg>
+        </span>
+        <span class="brand-word">Niffler</span>
+        <span class="brand-dot">.in</span>
       </div>
 
-      <nav class="go-nav-tabs" aria-label="Primary Navigation">
-        <button class="go-nav-tab active" data-section="travel" data-mode="flights">
-          <span class="tab-ico">✈️</span>
+      <nav class="nf-nav-tabs" aria-label="Primary Services">
+        <button class="nf-nav-tab active" data-section="travel" data-mode="flights">
+          <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
           <span>Flights</span>
         </button>
-        <button class="go-nav-tab" data-section="travel" data-mode="hotels">
-          <span class="tab-ico">🏨</span>
-          <span>Hotels</span>
+        <button class="nf-nav-tab" data-section="travel" data-mode="hotels">
+          <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>
+          <span>Stays</span>
         </button>
-        <button class="go-nav-tab" data-section="travel" data-mode="trains">
-          <span class="tab-ico">🚆</span>
-          <span>Trains</span>
+        <button class="nf-nav-tab" data-section="travel" data-mode="trains">
+          <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/></svg>
+          <span>Rail</span>
         </button>
-        <button class="go-nav-tab" data-section="travel" data-mode="buses">
-          <span class="tab-ico">🚌</span>
-          <span>Bus</span>
+        <button class="nf-nav-tab" data-section="travel" data-mode="buses">
+          <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>
+          <span>Coaches</span>
         </button>
-        <button class="go-nav-tab" data-section="itr">
-          <span class="tab-ico">📑</span>
+        <button class="nf-nav-tab" data-section="itr">
+          <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>ITR &amp; Tax</span>
         </button>
-        <button class="go-nav-tab" data-section="epf">
-          <span class="tab-ico">🏦</span>
-          <span>EPF Passbook</span>
+        <button class="nf-nav-tab" data-section="epf">
+          <svg class="nav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 6l7-3 7 3"/><path d="M4 10v11"/><path d="M20 10v11"/><path d="M8 14v3"/><path d="M12 14v3"/><path d="M16 14v3"/></svg>
+          <span>EPF Vault</span>
         </button>
       </nav>
 
-      <div class="go-nav-right">
-        <div class="go-user-pill">
-          <span class="user-avatar">SG</span>
-          <div class="user-meta">
-            <span class="user-hi">Hey Shubhransh</span>
-            <span class="user-sub">Profile Ready</span>
-          </div>
-        </div>
+      <!-- Auth Area: Clean Guest Mode or Mobile OTP Login -->
+      <div class="nf-nav-right" id="nav-auth-area">
+        <button type="button" class="btn-login-otp" id="btn-open-login">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+          <span>Login / OTP</span>
+        </button>
       </div>
     </div>
   </header>
 
   <!-- ========================================================================= -->
-  <!-- TRAVEL VIEW (Flights, Hotels, Trains, Bus) — Goibibo Layout -->
+  <!-- TRAVEL VIEW -->
   <!-- ========================================================================= -->
   <main id="view-travel" class="view-section active">
 
-    <!-- Royal Blue Hero Banner -->
-    <div class="go-hero-bg">
-      <div class="go-container">
-        <h1 class="go-hero-title" id="hero-heading">Domestic and International Flights</h1>
+    <!-- Deep Sapphire-to-Teal Hero Header -->
+    <div class="nf-hero-bg">
+      <div class="nf-container">
+        <div class="hero-top-flex">
+          <div>
+            <h1 class="nf-hero-title" id="hero-heading">Find the Lowest Airfares Across India &amp; Beyond</h1>
+            <p class="nf-hero-sub">Instant access &mdash; no login required to search live fares, compare rail berths, or calculate taxes.</p>
+          </div>
+          <div class="hero-guest-chip" id="guest-status-badge">Guest Access Enabled</div>
+        </div>
       </div>
     </div>
 
-    <!-- Overlapping White Search Widget -->
-    <div class="go-container">
-      <div class="go-search-card">
-        <!-- Trip Type Radio Pills -->
-        <div class="trip-type-row" id="trip-type-row">
-          <label class="radio-pill active">
-            <input type="radio" name="tripType" value="oneway" checked>
-            <span>One-way</span>
-          </label>
-          <label class="radio-pill">
-            <input type="radio" name="tripType" value="roundtrip">
-            <span>Round-trip</span>
-          </label>
+    <!-- Floating Smooth Search Card -->
+    <div class="nf-container">
+      <div class="nf-search-card">
+        <div class="trip-type-row">
+          <div class="trip-radios">
+            <label class="radio-pill active">
+              <input type="radio" name="tripType" value="oneway" checked>
+              <span>One-way</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="tripType" value="roundtrip">
+              <span>Round-trip</span>
+            </label>
+          </div>
           <div class="quick-routes">
-            <span class="qr-label">Popular:</span>
+            <span class="qr-label">Trending:</span>
             <button type="button" class="qr-chip" data-orig="DEL" data-dest="BLR">DEL &rarr; BLR</button>
             <button type="button" class="qr-chip" data-orig="DEL" data-dest="BOM">DEL &rarr; BOM</button>
             <button type="button" class="qr-chip" data-orig="BOM" data-dest="GOI">BOM &rarr; GOI</button>
@@ -92,62 +103,77 @@
           </div>
         </div>
 
-        <!-- Multi-Box Search Row -->
-        <div class="go-search-grid">
+        <div class="nf-search-grid" id="nf-search-grid">
           <div class="search-box" id="box-from">
-            <span class="box-label" id="lbl-origin">From</span>
+            <span class="box-label" id="lbl-origin">Origin</span>
             <input type="text" id="travel-origin" value="DEL" placeholder="DEL or Delhi" autocomplete="off">
-            <span class="box-sub" id="sub-origin">Indira Gandhi Intl, New Delhi</span>
+            <span class="box-sub" id="sub-origin">New Delhi (DEL)</span>
           </div>
 
-          <button type="button" class="swap-btn" id="btn-swap-route" title="Swap Origin and Destination">&#8644;</button>
+          <button type="button" class="swap-btn" id="btn-swap-route" title="Swap Origin &amp; Destination">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+          </button>
 
           <div class="search-box" id="box-to">
-            <span class="box-label" id="lbl-dest">To</span>
+            <span class="box-label" id="lbl-dest">Destination</span>
             <input type="text" id="travel-dest" value="BLR" placeholder="BLR or Bengaluru" autocomplete="off">
-            <span class="box-sub" id="sub-dest">Kempegowda Intl, Bengaluru</span>
+            <span class="box-sub" id="sub-dest">Bengaluru (BLR)</span>
+          </div>
+
+          <!-- Interactive Full-Box Calendar Trigger -->
+          <div class="search-box date-box" id="box-departure" role="button" tabindex="0" aria-label="Choose Departure Date">
+            <div class="date-label-row">
+              <span class="box-label">Departure</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="date-display-val" id="dep-date-pretty">04 Dec '26</div>
+            <span class="box-sub" id="dep-day-pretty">Friday &bull; Click to pick</span>
+            <input type="date" id="travel-date" class="date-native-overlay" aria-label="Departure Date Picker">
+          </div>
+
+          <!-- Optional Return Box (Reveals smoothly for Round-trip) -->
+          <div class="search-box date-box return-box" id="box-return" style="display:none;" role="button" tabindex="0" aria-label="Choose Return Date">
+            <div class="date-label-row">
+              <span class="box-label">Return</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div class="date-display-val" id="ret-date-pretty">07 Dec '26</div>
+            <span class="box-sub" id="ret-day-pretty">Monday &bull; Click to pick</span>
+            <input type="date" id="return-date" class="date-native-overlay" aria-label="Return Date Picker">
           </div>
 
           <div class="search-box">
-            <span class="box-label">Departure</span>
-            <input type="date" id="travel-date">
-            <span class="box-sub" id="sub-date">Live Fare Check</span>
-          </div>
-
-          <div class="search-box">
-            <span class="box-label">Travellers &amp; Class</span>
+            <span class="box-label">Cabin &amp; Guests</span>
             <select id="travel-pax">
               <option value="1-E">1 Adult &bull; Economy</option>
               <option value="2-E">2 Adults &bull; Economy</option>
-              <option value="1-PE">1 Adult &bull; Premium Economy</option>
+              <option value="1-PE">1 Adult &bull; Prem. Economy</option>
               <option value="1-B">1 Adult &bull; Business</option>
             </select>
-            <span class="box-sub">Instant Auto-Fill Enabled</span>
+            <span class="box-sub">Guest Checkout Ready</span>
           </div>
         </div>
 
-        <!-- Special Fares Strip -->
         <div class="special-fares-row">
           <div class="sf-left">
-            <span class="sf-badge">MORE BENEFITS</span>
-            <button type="button" class="sf-pill active" data-fare="regular">Regular</button>
+            <span class="sf-badge">FARE TYPE</span>
+            <button type="button" class="sf-pill active" data-fare="regular">Standard</button>
             <button type="button" class="sf-pill" data-fare="student">Student</button>
             <button type="button" class="sf-pill" data-fare="senior">Senior Citizen</button>
-            <button type="button" class="sf-pill" data-fare="armed">Armed Forces</button>
+            <button type="button" class="sf-pill" data-fare="armed">Defence</button>
           </div>
           <label class="direct-toggle">
             <input type="checkbox" id="chk-direct-top">
-            <span>Direct Flights Only</span>
+            <span>Non-Stop Only</span>
           </label>
         </div>
 
-        <!-- Floating Signature Orange CTA Button -->
         <div class="search-cta-wrap">
-          <button type="button" id="btn-search-travel" class="go-btn-orange">SEARCH FLIGHTS</button>
+          <button type="button" id="btn-search-travel" class="nf-btn-amber">SEARCH FLIGHTS</button>
         </div>
       </div>
 
-      <!-- Live Deal Insight Bar (Gemini Hydrogen + Goibibo Live Feed) -->
+      <!-- Live Deal Insight Bar -->
       <div class="deal-insight-bar" id="deal-insight-bar">
         <div class="di-left">
           <span class="di-live-dot"></span>
@@ -156,23 +182,22 @@
         </div>
         <div class="di-right">
           <span class="di-coupon" id="di-coupon-badge" style="display:none;"></span>
-          <button type="button" class="di-trace-btn" id="btn-toggle-trace">Agent Log</button>
+          <button type="button" class="di-trace-btn" id="btn-toggle-trace">Search Trace</button>
         </div>
       </div>
       <div class="agent-trace-drawer" id="agent-trace-drawer" style="display:none;">
         <ul id="agent-trace-list"></ul>
       </div>
 
-      <!-- 2-Column Goibibo Results Workspace -->
+      <!-- 2-Column Listing Workspace -->
       <div class="ota-workspace">
-        <!-- Left Sidebar Filters -->
         <aside class="ota-sidebar" id="ota-sidebar">
           <div class="sidebar-head">
-            <h3>Filters</h3>
-            <button type="button" id="btn-reset-filters" class="link-reset">RESET ALL</button>
+            <h3>Refine Results</h3>
+            <button type="button" id="btn-reset-filters" class="link-reset">Clear All</button>
           </div>
 
-          <div class="filter-block" id="flt-filter-stops">
+          <div class="filter-block">
             <h4>Stops</h4>
             <label class="chk-row">
               <input type="checkbox" class="filter-stop" value="0">
@@ -186,20 +211,20 @@
             </label>
           </div>
 
-          <div class="filter-block" id="flt-filter-price">
+          <div class="filter-block">
             <div class="fb-head">
-              <h4>One-way Price</h4>
+              <h4>Max Price</h4>
               <span id="lbl-price-cap" class="price-cap-val">All Fares</span>
             </div>
-            <input type="range" id="range-max-price" min="2000" max="50000" step="250" value="50000" class="go-slider">
+            <input type="range" id="range-max-price" min="2000" max="50000" step="250" value="50000" class="nf-slider">
             <div class="slider-bounds">
               <span id="min-price-bound">₹2,000</span>
               <span id="max-price-bound">₹50,000</span>
             </div>
           </div>
 
-          <div class="filter-block" id="flt-filter-dep">
-            <h4>Departure Time</h4>
+          <div class="filter-block">
+            <h4>Departure Window</h4>
             <div class="time-slot-grid">
               <button type="button" class="time-slot-btn" data-slot="before6">Before 6 AM</button>
               <button type="button" class="time-slot-btn" data-slot="6to12">6 AM - 12 PM</button>
@@ -208,40 +233,33 @@
             </div>
           </div>
 
-          <div class="filter-block" id="flt-filter-airlines">
+          <div class="filter-block">
             <h4>Airlines</h4>
-            <div id="airlines-filter-list">
-              <!-- Populated dynamically from live results -->
-            </div>
+            <div id="airlines-filter-list"></div>
           </div>
         </aside>
 
-        <!-- Right Listing Column -->
         <div class="ota-results-col">
-          <!-- Sort Bar (Goibibo 4-column sort strip) -->
-          <div class="go-sort-bar" id="go-sort-bar">
+          <div class="nf-sort-bar" id="nf-sort-bar">
             <button type="button" class="sort-tab active" data-sort="cheapest">
-              <span class="sort-title">Cheapest</span>
+              <span class="sort-title">Lowest Fare</span>
               <span class="sort-sub" id="sort-sub-cheapest">—</span>
             </button>
             <button type="button" class="sort-tab" data-sort="fastest">
-              <span class="sort-title">Fastest</span>
+              <span class="sort-title">Quickest</span>
               <span class="sort-sub" id="sort-sub-fastest">—</span>
             </button>
             <button type="button" class="sort-tab" data-sort="early">
-              <span class="sort-title">Early Departure</span>
+              <span class="sort-title">Earliest Departure</span>
               <span class="sort-sub">Morning first</span>
             </button>
             <button type="button" class="sort-tab" data-sort="value">
-              <span class="sort-title">Best Value</span>
+              <span class="sort-title">Best Overall</span>
               <span class="sort-sub" id="sort-sub-count">Scanning...</span>
             </button>
           </div>
 
-          <!-- Travel Cards Feed -->
-          <div class="go-cards-feed" id="travel-cards">
-            <!-- Rendered dynamically -->
-          </div>
+          <div class="nf-cards-feed" id="travel-cards"></div>
         </div>
       </div>
     </div>
@@ -251,22 +269,27 @@
   <!-- ITR & TAX VIEW -->
   <!-- ========================================================================= -->
   <section id="view-itr" class="view-section">
-    <div class="go-hero-bg compact">
-      <div class="go-container">
-        <h1 class="go-hero-title">Income Tax Calculator &amp; ITR-1 Sahaj Filing</h1>
+    <div class="nf-hero-bg compact">
+      <div class="nf-container">
+        <h1 class="nf-hero-title">Income Tax Calculator &amp; ITR-1 Sahaj Exporter</h1>
+        <p class="nf-hero-sub">Compare New vs Old Regime instantly and export JSON for incometax.gov.in.</p>
       </div>
     </div>
-    <div class="go-container fintech-container">
-      <div class="go-panel-card">
+    <div class="nf-container fintech-container">
+      <div class="nf-panel-card">
         <div class="panel-header">
           <div>
-            <h2>Autonomous ITR Optimizer (FY 2024-25 / AY 2025-26)</h2>
-            <p class="panel-sub">Compare New Regime (Sec 115BAC) vs Old Regime and export upload-ready JSON for incometax.gov.in.</p>
+            <h2>ITR-1 Optimizer (FY 2024-25 / AY 2025-26)</h2>
+            <p class="panel-sub">No login required. Enter your Form-16 figures below to compare slabs and generate ITR-1 JSON.</p>
           </div>
-          <span class="tag-verified">Sec 115BAC Compliant</span>
+          <span class="tag-verified">Sec 115BAC Verified</span>
         </div>
 
         <div class="fintech-form-grid">
+          <div class="f-field">
+            <label>Taxpayer Name (Optional)</label>
+            <input type="text" id="itr-name" placeholder="e.g. Ananya Sharma">
+          </div>
           <div class="f-field">
             <label>Annual Gross Salary (₹)</label>
             <input type="number" id="itr-salary" value="1250000" step="50000">
@@ -293,7 +316,7 @@
           </div>
         </div>
 
-        <button id="btn-calc-itr" class="go-btn-orange" style="margin-top: 1.25rem;">CALCULATE TAX &amp; GENERATE ITR-1 JSON</button>
+        <button id="btn-calc-itr" class="nf-btn-amber" style="margin-top: 1.25rem;">CALCULATE TAX &amp; GENERATE ITR-1 JSON</button>
 
         <div id="itr-results" class="itr-results-wrap" style="display:none;">
           <div class="showdown-banner" id="showdown-banner"></div>
@@ -309,7 +332,7 @@
               <div class="rc-meta" id="stat-old-deductions">Total Deductions: ₹3,45,000</div>
             </div>
           </div>
-          <button id="btn-download-itr" class="go-btn-blue-outline" style="margin-top: 1rem;">📥 Download ITR-1 Sahaj JSON</button>
+          <button id="btn-download-itr" class="nf-btn-outline" style="margin-top: 1rem;">Download ITR-1 Sahaj JSON</button>
         </div>
       </div>
     </div>
@@ -319,17 +342,18 @@
   <!-- EPF PASSBOOK VIEW -->
   <!-- ========================================================================= -->
   <section id="view-epf" class="view-section">
-    <div class="go-hero-bg compact">
-      <div class="go-container">
-        <h1 class="go-hero-title">EPFO Passbook, Withdrawal &amp; Retirement Explorer</h1>
+    <div class="nf-hero-bg compact">
+      <div class="nf-container">
+        <h1 class="nf-hero-title">EPFO Vault &amp; Retirement Compounder</h1>
+        <p class="nf-hero-sub">Check Form 31/19/10C withdrawal eligibility and project your 8.25% PF corpus.</p>
       </div>
     </div>
-    <div class="go-container fintech-container">
-      <div class="go-panel-card">
+    <div class="nf-container fintech-container">
+      <div class="nf-panel-card">
         <div class="panel-header">
           <div>
-            <h2>EPFO Account Breakdown &amp; 8.25% Compounder</h2>
-            <p class="panel-sub">Verify your 12% employee share, 3.67% employer PF share, EPS pension, and Form 31 eligibility.</p>
+            <h2>EPF Passbook &amp; Eligibility Checker</h2>
+            <p class="panel-sub">Breaks down your 12% employee share, 3.67% employer PF share, and 8.33% EPS pension.</p>
           </div>
           <span class="tag-verified">8.25% Govt Interest</span>
         </div>
@@ -353,7 +377,7 @@
           </div>
         </div>
 
-        <button id="btn-explore-epf" class="go-btn-orange" style="margin-top: 1.25rem;">ANALYZE EPF PASSBOOK</button>
+        <button id="btn-explore-epf" class="nf-btn-amber" style="margin-top: 1.25rem;">ANALYZE EPF PASSBOOK</button>
 
         <div id="epf-results" style="display:none; margin-top: 1.5rem;">
           <div class="epf-stats-row">
@@ -377,13 +401,51 @@
     </div>
   </section>
 
-  <!-- Goibibo-Style Review & Payment Handoff Modal -->
+  <!-- Mobile Number & OTP Login Modal -->
+  <div id="login-modal" class="modal-overlay">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <div>
+          <h3>Sign In with Mobile &amp; OTP</h3>
+          <span class="modal-sub">Optional &mdash; saves your passenger details for faster checkout</span>
+        </div>
+        <button class="modal-close" id="btn-close-login">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="otp-step-1">
+          <div class="f-field" style="margin-bottom:0.85rem;">
+            <label>Your Full Name (Optional)</label>
+            <input type="text" id="login-name" placeholder="e.g. Rohan Verma">
+          </div>
+          <div class="f-field">
+            <label>Mobile Number (+91)</label>
+            <input type="tel" id="login-phone" maxlength="10" placeholder="Enter 10-digit mobile number">
+          </div>
+          <button type="button" id="btn-send-otp" class="nf-btn-amber" style="width:100%; margin-top:1.1rem;">SEND OTP</button>
+        </div>
+
+        <div id="otp-step-2" style="display:none;">
+          <div class="otp-sms-banner" id="otp-sms-banner"></div>
+          <div class="f-field" style="margin-top:0.85rem;">
+            <label>Enter 4-Digit OTP</label>
+            <input type="text" id="login-otp-code" maxlength="4" placeholder="e.g. 4829" style="letter-spacing:0.35em; text-align:center; font-size:1.25rem;">
+          </div>
+          <div class="modal-actions" style="margin-top:1rem;">
+            <button type="button" id="btn-back-otp" class="nf-btn-outline modal-cta">Change Number</button>
+            <button type="button" id="btn-verify-otp" class="nf-btn-amber modal-cta">Verify &amp; Sign In</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Review & Handoff Modal -->
   <div id="booking-modal" class="modal-overlay">
     <div class="modal-card">
       <div class="modal-header">
         <div>
-          <h3>Review Booking &amp; Passenger Details</h3>
-          <span class="modal-sub">Instant auto-fill handoff to official payment gateway</span>
+          <h3>Review Booking &amp; Traveller Details</h3>
+          <span class="modal-sub">Proceed directly as Guest or with saved details</span>
         </div>
         <button class="modal-close" id="btn-close-modal">&times;</button>
       </div>
@@ -391,12 +453,24 @@
         <div class="modal-item-banner" id="modal-item-title"></div>
 
         <div class="passenger-summary">
-          <h4>Traveller Information (Auto-Filled)</h4>
-          <div class="pax-grid">
-            <div><span class="px-lbl">Name</span><strong id="m-pax-name"></strong></div>
-            <div><span class="px-lbl">Age / Gender</span><strong><span id="m-pax-age"></span> / <span id="m-pax-gender"></span></strong></div>
-            <div><span class="px-lbl">Email</span><strong id="m-pax-email"></strong></div>
-            <div><span class="px-lbl">Mobile</span><strong id="m-pax-phone"></strong></div>
+          <h4>Traveller Information (Editable Guest Checkout)</h4>
+          <div class="pax-edit-grid">
+            <div class="f-field">
+              <label>Full Name</label>
+              <input type="text" id="m-input-name" placeholder="Guest Traveller">
+            </div>
+            <div class="f-field">
+              <label>Mobile Number</label>
+              <input type="tel" id="m-input-phone" placeholder="+91 Mobile Number">
+            </div>
+            <div class="f-field">
+              <label>Email Address</label>
+              <input type="email" id="m-input-email" placeholder="Ticket delivery email">
+            </div>
+            <div class="f-field">
+              <label>Age</label>
+              <input type="number" id="m-input-age" value="28" min="1" max="110">
+            </div>
           </div>
           <div class="sess-ref">Session Reference: <code id="m-sess-id"></code></div>
         </div>
@@ -410,11 +484,11 @@
         </div>
 
         <div class="modal-actions">
-          <a id="btn-goto-goibibo" href="#" target="_blank" class="go-btn-orange modal-cta">
-            Book on Goibibo Live &rarr;
+          <a id="btn-goto-partner" href="#" target="_blank" class="nf-btn-amber modal-cta">
+            Continue to Partner Booking &rarr;
           </a>
-          <a id="btn-goto-payment" href="#" target="_blank" class="go-btn-blue-outline modal-cta">
-            Direct Gateway Handoff
+          <a id="btn-goto-payment" href="#" target="_blank" class="nf-btn-outline modal-cta">
+            Direct Checkout Handoff
           </a>
         </div>
       </div>

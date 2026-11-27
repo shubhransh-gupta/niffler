@@ -2,12 +2,18 @@ from http.server import BaseHTTPRequestHandler
 import json
 import urllib.parse
 import sys
+import os
+import hmac
+import hashlib
+import secrets
+import time
 from pathlib import Path
 
 # Add project root to sys.path
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
 
+from niffler.config import UserProfile
 from niffler.travel.flights import FlightRadar
 from niffler.travel.hotels import HotelRadar
 from niffler.travel.trains import IRCTCRadar
@@ -15,6 +21,8 @@ from niffler.travel.buses import BusRadar
 from niffler.travel.booking_handoff import BookingHandoffEngine
 from niffler.citizen.itr_optimizer import ITROptimizer
 from niffler.citizen.epf_explorer import EPFExplorer
+
+OTP_SECRET = (os.getenv("OTP_SECRET") or os.getenv("GEMINI_API_KEY") or "niffler-otp-dev-key").encode("utf-8")
 
 
 class handler(BaseHTTPRequestHandler):
@@ -116,17 +124,59 @@ class handler(BaseHTTPRequestHandler):
         except Exception:
             data = {}
 
-        if route == "booking/handoff":
+        if route == "auth/send-otp":
+            raw_phone = "".join(c for c in str(data.get("phone", "")) if c.isdigit())[-10:]
+            if len(raw_phone) != 10:
+                return self._send_json({"error": "Please enter a valid 10-digit mobile number."}, status=400)
+            otp = f"{secrets.randbelow(9000) + 1000}"
+            exp = int(time.time()) + 300
+            sig = hmac.new(OTP_SECRET, f"{raw_phone}:{otp}:{exp}".encode(), hashlib.sha256).hexdigest()
+            return self._send_json({
+                "sent": True,
+                "phone": f"+91 {raw_phone}",
+                "otp_token": f"{exp}.{sig}",
+                "demo_otp": otp,
+                "expires_in": 300,
+            })
+
+        elif route == "auth/verify-otp":
+            raw_phone = "".join(c for c in str(data.get("phone", "")) if c.isdigit())[-10:]
+            otp = str(data.get("otp", "")).strip()
+            token = str(data.get("otp_token", ""))
+            name = str(data.get("name", "")).strip() or f"Traveller ({raw_phone[-4:]})"
+            try:
+                exp_s, sig = token.split(".", 1)
+                if int(time.time()) > int(exp_s):
+                    return self._send_json({"verified": False, "error": "OTP expired. Please resend."}, status=400)
+                expected = hmac.new(OTP_SECRET, f"{raw_phone}:{otp}:{exp_s}".encode(), hashlib.sha256).hexdigest()
+                if hmac.compare_digest(sig, expected):
+                    return self._send_json({
+                        "verified": True,
+                        "user": {"name": name, "phone": f"+91 {raw_phone}"}
+                    })
+            except Exception:
+                pass
+            return self._send_json({"verified": False, "error": "Invalid OTP code."}, status=400)
+
+        elif route == "booking/handoff":
+            profile = UserProfile(
+                full_name=str(data.get("passenger_name") or "").strip() or "Guest Traveller",
+                age=int(data.get("passenger_age") or 28),
+                gender=str(data.get("passenger_gender") or "Adult"),
+                email=str(data.get("contact_email") or "").strip() or "guest@niffler.app",
+                phone=str(data.get("contact_phone") or "").strip() or "+91 00000 00000",
+            )
+            engine = BookingHandoffEngine(profile)
             b_type = data.get("type", "flight")
             if b_type == "hotel":
-                sess = self.handoff_engine.prepare_hotel_handoff(
-                    data.get("hotel_name", "Taj Exotica"),
+                sess = engine.prepare_hotel_handoff(
+                    data.get("hotel_name", "Hotel"),
                     data.get("city", "Goa"),
-                    int(data.get("nights", 2)),
-                    int(data.get("price", 14500))
+                    int(data.get("nights", 1)),
+                    int(data.get("price", 4500))
                 )
             else:
-                sess = self.handoff_engine.prepare_flight_handoff(
+                sess = engine.prepare_flight_handoff(
                     data.get("airline", "IndiGo"),
                     data.get("flight_number", "6E-2041"),
                     data.get("origin", "DEL"),
@@ -142,7 +192,7 @@ class handler(BaseHTTPRequestHandler):
             hra = int(data.get("hra", 120000))
             tds = int(data.get("tds", 80000))
             pan = data.get("pan", "ABCDE1234F")
-            name = data.get("name", "Shubhransh Gupta")
+            name = str(data.get("name", "")).strip() or "Taxpayer"
 
             res = self.itr_optimizer.optimize_and_generate_itr(
                 pan=pan,
@@ -165,9 +215,9 @@ class handler(BaseHTTPRequestHandler):
 
         self.send_error(404, f"Route not found: {route}")
 
-    def _send_json(self, data):
+    def _send_json(self, data, status: int = 200):
         payload = json.dumps(data).encode("utf-8")
-        self.send_response(200)
+        self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
