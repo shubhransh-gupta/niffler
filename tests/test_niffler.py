@@ -168,3 +168,22 @@ def test_niffler_agent():
     resp_tax = agent.process_query("How much tax can I save on 15 lakh salary?")
     assert "reply" in resp_tax
     assert resp_tax.get("action", {}).get("type") in ["CALC_ITR", "NONE"]
+
+
+def test_travel_web_crawler_and_providers():
+    from niffler.travel.crawler import TravelWebCrawler
+    crawler = TravelWebCrawler()
+    fl_quotes = crawler.crawl_google_flights("DEL", "BOM", "2026-12-15")
+    assert isinstance(fl_quotes, list)
+
+    radar = FlightRadar()
+    flights = radar.search_flights("DEL", "BLR")
+    assert len(flights) > 0
+    f = flights[0]
+    assert len(f.provider_offers) >= 5
+    providers = [p["provider"] for p in f.provider_offers]
+    assert "EaseMyTrip" in providers
+    assert "MakeMyTrip" in providers
+    assert "Ixigo" in providers
+    assert "Goibibo" in providers
+
