@@ -9,11 +9,12 @@ on:
 
 jobs:
   patch-pilot-ci:
-    if: github.event_name == 'pull_request' || contains(github.event.comment.body, '/heal') || contains(github.event.comment.body, '/review') || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request' || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/heal')) || (github.event_name == 'issue_comment' && contains(github.event.comment.body, '/review')) || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout Repository
@@ -30,13 +31,12 @@ jobs:
           max-attempts: '3'
 
       - name: Post Autonomous PR Review Comment
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && success()
         env:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "### ⚡ Patch Pilot Autonomous SWE Review
+          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "### ⚡ Patch Pilot Autonomous SWE Review
 
 | Metric | Result |
 | :--- | :--- |
@@ -46,4 +46,3 @@ jobs:
 | **Live Target** | [niffler-lilac.vercel.app](https://niffler-lilac.vercel.app) |
 
 All automated unit tests and code validations passed cleanly. This PR is safe to merge."
-          fi
