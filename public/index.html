@@ -452,16 +452,21 @@
       <div class="modal-body">
         <div class="modal-item-banner" id="modal-item-title"></div>
 
+        <div class="provider-section">
+          <h4>Compare &amp; Choose Booking Provider (Skyscanner Multi-Channel)</h4>
+          <div class="provider-compare-list" id="modal-provider-list"></div>
+        </div>
+
         <div class="passenger-summary">
-          <h4>Traveller Information (Editable Guest Checkout)</h4>
+          <h4>Traveller Details (Auto-Fill &amp; Quick-Copy Ready)</h4>
           <div class="pax-edit-grid">
             <div class="f-field">
               <label>Full Name</label>
-              <input type="text" id="m-input-name" placeholder="Guest Traveller">
+              <input type="text" id="m-input-name" placeholder="First &amp; Last Name">
             </div>
             <div class="f-field">
               <label>Mobile Number</label>
-              <input type="tel" id="m-input-phone" placeholder="+91 Mobile Number">
+              <input type="tel" id="m-input-phone" placeholder="+91 10-digit Mobile">
             </div>
             <div class="f-field">
               <label>Email Address</label>
@@ -472,23 +477,30 @@
               <input type="number" id="m-input-age" value="28" min="1" max="110">
             </div>
           </div>
+          <div class="autofill-companion-strip" id="autofill-companion-strip">
+            <div class="af-copy-txt">Route, dates, cabin &amp; pax are pre-filled automatically via partner URL. Drag bookmarklet to fill name/email/phone on partner checkout in 1 click:</div>
+            <div class="af-actions">
+              <a id="btn-autofill-bookmarklet" href="#" class="af-bookmarklet-pill" title="Drag to Bookmarks Bar">Niffler 1-Click Auto-Fill</a>
+              <button type="button" id="btn-copy-pax" class="af-copy-btn">Copy Traveller JSON</button>
+            </div>
+          </div>
           <div class="sess-ref">Session Reference: <code id="m-sess-id"></code></div>
         </div>
 
         <div class="price-breakdown">
-          <h4>Fare Summary</h4>
-          <div class="p-row"><span>Base Fare</span><span id="m-base-fare"></span></div>
-          <div class="p-row"><span>Taxes &amp; Airport Surcharges</span><span id="m-taxes"></span></div>
-          <div class="p-row"><span>Platform Convenience Fee</span><span id="m-conv-fee"></span></div>
-          <div class="p-row total"><span>Total Amount Payable</span><span id="m-total-amt"></span></div>
+          <h4>Estimated Fare Summary (<span id="m-provider-name">Selected Provider</span>)</h4>
+          <div class="p-row"><span>Base Quote</span><span id="m-base-fare"></span></div>
+          <div class="p-row"><span>Estimated Taxes &amp; Fees</span><span id="m-taxes"></span></div>
+          <div class="p-row"><span>Provider Fee</span><span id="m-conv-fee"></span></div>
+          <div class="p-row total"><span>Estimated Payable</span><span id="m-total-amt"></span></div>
         </div>
 
         <div class="modal-actions">
-          <a id="btn-goto-partner" href="#" target="_blank" class="nf-btn-amber modal-cta">
-            Continue to Partner Booking &rarr;
-          </a>
+          <button type="button" id="btn-proceed-provider" class="nf-btn-amber modal-cta">
+            Proceed to Checkout &rarr;
+          </button>
           <a id="btn-goto-payment" href="#" target="_blank" class="nf-btn-outline modal-cta">
-            Direct Checkout Handoff
+            Direct Gateway View
           </a>
         </div>
       </div>

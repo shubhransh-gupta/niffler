@@ -389,9 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       if (currentTravelMode === "flights") {
+        const paxVal = (document.getElementById("travel-pax").value || "1-E").split("-");
         const params = new URLSearchParams({
           origin,
           destination: dest,
+          pax: paxVal[0] || "1",
+          cabin: paxVal[1] || "E",
           with_meta: "true",
           direct: directOnly ? "true" : "false",
         });
@@ -573,6 +576,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const stopsLabel = f.stops === 0 ? "Non-stop" : `${f.stops} stop`;
       const stopsClass = f.stops === 0 ? "nonstop" : "withstop";
 
+      const offers = f.provider_offers || [];
+      const offerPillsHtml = offers.map((o, idx) => `
+        <button type="button" class="provider-pill ${idx === 0 ? 'best' : ''}" data-pidx="${idx}">
+          <span>${o.provider}</span>
+          <strong>&#8377;${o.price_inr.toLocaleString()}</strong>
+        </button>
+      `).join("");
+
       const card = document.createElement("div");
       card.className = "nf-card";
       card.innerHTML = `
@@ -604,21 +615,29 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="price-col">
             <div class="price-wrap">
               <div class="p-amt">&#8377;${f.price_inr.toLocaleString()}</div>
-              <div class="p-sub">per adult</div>
+              <div class="p-sub">${offers.length ? `${offers.length} providers` : 'per adult'}</div>
             </div>
-            <button type="button" class="btn-nf-book btn-book-flight">Select</button>
+            <button type="button" class="btn-nf-book btn-book-flight">View Deals</button>
           </div>
         </div>
+        ${offers.length ? `
+        <div class="provider-pills-row">
+          <span class="pp-label">Compare &amp; Book:</span>
+          ${offerPillsHtml}
+        </div>` : ''}
         <div class="nf-card-footer">
           <div class="footer-left">
             ${f.is_cheapest ? '<span class="cheapest-flag">Best Fare</span>' : ''}
-            <span class="promo-pill">${f.promo_note || 'Zero gateway fee on UPI'}</span>
+            <span class="promo-pill">${f.promo_note || 'Compare Official Airline & OTAs'}</span>
             <span>Cabin: ${f.cabin_baggage || '7 kg'} &bull; Check-in: ${f.checkin_baggage || '15 kg'}</span>
           </div>
-          <span class="source-flag">${f.source || 'Live OTA Feed'}</span>
+          <span class="source-flag">${f.source || 'Live Multi-Provider'}</span>
         </div>
       `;
-      card.querySelector(".btn-book-flight").addEventListener("click", () => openPaymentModal("flight", f));
+      card.querySelector(".btn-book-flight").addEventListener("click", () => openPaymentModal("flight", f, 0));
+      card.querySelectorAll(".provider-pill").forEach(btn => {
+        btn.addEventListener("click", () => openPaymentModal("flight", f, parseInt(btn.getAttribute("data-pidx")) || 0));
+      });
       container.appendChild(card);
     });
   }
@@ -627,6 +646,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("travel-cards");
     container.innerHTML = "";
     hotels.forEach(h => {
+      const offers = h.provider_offers || [];
+      const offerPillsHtml = offers.map((o, idx) => `
+        <button type="button" class="provider-pill ${idx === 0 ? 'best' : ''}" data-pidx="${idx}">
+          <span>${o.provider}</span>
+          <strong>&#8377;${o.price_inr.toLocaleString()}</strong>
+        </button>
+      `).join("");
       const card = document.createElement("div");
       card.className = "nf-card";
       card.innerHTML = `
@@ -645,11 +671,19 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="p-amt">&#8377;${h.price_per_night_inr.toLocaleString()}</div>
               <div class="p-sub">per night</div>
             </div>
-            <button type="button" class="btn-nf-book btn-book-hotel">Select Room</button>
+            <button type="button" class="btn-nf-book btn-book-hotel">View Deals</button>
           </div>
         </div>
+        ${offers.length ? `
+        <div class="provider-pills-row">
+          <span class="pp-label">Compare &amp; Book:</span>
+          ${offerPillsHtml}
+        </div>` : ''}
       `;
-      card.querySelector(".btn-book-hotel").addEventListener("click", () => openPaymentModal("hotel", h));
+      card.querySelector(".btn-book-hotel").addEventListener("click", () => openPaymentModal("hotel", h, 0));
+      card.querySelectorAll(".provider-pill").forEach(btn => {
+        btn.addEventListener("click", () => openPaymentModal("hotel", h, parseInt(btn.getAttribute("data-pidx")) || 0));
+      });
       container.appendChild(card);
     });
   }
@@ -709,19 +743,66 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // 5. Guest / Logged-In Booking Handoff Modal
+  // 5. Skyscanner Multi-Provider Selector & Pre-Fill Checkout Handoff
   // =========================================================================
-  async function openPaymentModal(type, item) {
+  let activeModalContext = { type: "flight", item: null, selectedOffer: null };
+
+  function buildClientBookmarklet() {
+    const full = document.getElementById("m-input-name").value.trim() || "Guest Traveller";
+    const parts = full.split(/\s+/);
+    const phone = document.getElementById("m-input-phone").value.replace(/\D/g, "").slice(-10);
+    const email = document.getElementById("m-input-email").value.trim();
+    const age = document.getElementById("m-input-age").value || "28";
+    const d = JSON.stringify({
+      full,
+      first: parts[0] || "Guest",
+      last: parts.slice(1).join(" "),
+      phone,
+      email,
+      age,
+    });
+    return (
+      `javascript:(function(){var d=${d};` +
+      `document.querySelectorAll('input').forEach(function(i){` +
+      `var k=(i.name+i.id+i.placeholder+(i.getAttribute('aria-label')||'')).toLowerCase();` +
+      `var v=null;if(/first.?name|fname|given/.test(k))v=d.first;else if(/last.?name|lname|surname/.test(k))v=d.last;` +
+      `else if(/full.?name|pax.?name|traveller/.test(k))v=d.full;else if(/mail/.test(k))v=d.email;` +
+      `else if(/phone|mobile|contact/.test(k))v=d.phone;else if(/age/.test(k))v=d.age;` +
+      `if(v!==null&&!i.disabled&&i.type!=='hidden'){var s=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;` +
+      `s.call(i,v);i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}));}});})();`
+    );
+  }
+
+  ["m-input-name", "m-input-phone", "m-input-email", "m-input-age"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+      document.getElementById("btn-autofill-bookmarklet").href = buildClientBookmarklet();
+    });
+  });
+
+  document.getElementById("btn-copy-pax").addEventListener("click", async () => {
+    const data = {
+      name: document.getElementById("m-input-name").value.trim(),
+      phone: document.getElementById("m-input-phone").value.trim(),
+      email: document.getElementById("m-input-email").value.trim(),
+      age: document.getElementById("m-input-age").value,
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      const btn = document.getElementById("btn-copy-pax");
+      btn.innerText = "Copied!";
+      setTimeout(() => { btn.innerText = "Copy Traveller JSON"; }, 1800);
+    } catch (_) {}
+  });
+
+  async function refreshBookingSession() {
+    const { type, item, selectedOffer } = activeModalContext;
+    if (!item) return;
+
     const nameInput = document.getElementById("m-input-name");
     const phoneInput = document.getElementById("m-input-phone");
     const emailInput = document.getElementById("m-input-email");
     const ageInput = document.getElementById("m-input-age");
-
-    // Pre-fill ONLY if user explicitly signed in via Mobile OTP
-    if (loggedInUser) {
-      if (!nameInput.value) nameInput.value = loggedInUser.name || "";
-      if (!phoneInput.value) phoneInput.value = loggedInUser.phone || "";
-    }
+    const chosenFare = selectedOffer ? selectedOffer.price_inr : (item.price_inr || item.price_per_night_inr);
 
     const payload = type === "hotel"
       ? {
@@ -729,7 +810,9 @@ document.addEventListener("DOMContentLoaded", () => {
           hotel_name: item.name,
           city: item.city,
           nights: 1,
-          price: item.price_per_night_inr,
+          price: chosenFare,
+          provider: selectedOffer ? selectedOffer.provider : "Booking.com",
+          provider_url: selectedOffer ? selectedOffer.url : item.booking_url,
           passenger_name: nameInput.value,
           contact_phone: phoneInput.value,
           contact_email: emailInput.value,
@@ -740,40 +823,97 @@ document.addEventListener("DOMContentLoaded", () => {
           flight_number: item.flight_number,
           origin: item.origin,
           destination: item.destination,
-          fare: item.price_inr,
+          fare: chosenFare,
+          travel_date: depInput.value,
+          provider: selectedOffer ? selectedOffer.provider : "Official Airline",
+          provider_url: selectedOffer ? selectedOffer.url : item.booking_url,
           passenger_name: nameInput.value,
           contact_phone: phoneInput.value,
           contact_email: emailInput.value,
           passenger_age: parseInt(ageInput.value) || 28,
         };
 
-    try {
-      const res = await fetch("/api/booking/handoff", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+    const res = await fetch("/api/booking/handoff", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const sess = await res.json();
+
+    document.getElementById("modal-item-title").innerHTML = sess.item_title;
+    document.getElementById("m-sess-id").innerText = sess.session_id;
+    document.getElementById("m-provider-name").innerText = sess.provider || "Selected Provider";
+
+    const baseFare = item.base_fare_inr > 0 ? item.base_fare_inr : sess.amount_inr;
+    const taxesAmt = item.taxes_inr > 0 ? item.taxes_inr : sess.taxes_inr;
+    document.getElementById("m-base-fare").innerText = `₹${baseFare.toLocaleString()}`;
+    document.getElementById("m-taxes").innerText = `₹${taxesAmt.toLocaleString()}`;
+    document.getElementById("m-conv-fee").innerText = `₹${sess.convenience_fee_inr.toLocaleString()}`;
+    document.getElementById("m-total-amt").innerText = `₹${chosenFare.toLocaleString()}`;
+
+    document.getElementById("btn-autofill-bookmarklet").href = sess.autofill_bookmarklet || buildClientBookmarklet();
+    document.getElementById("btn-goto-payment").href = sess.payment_gateway_url;
+    document.getElementById("btn-proceed-provider").innerText = `Proceed on ${sess.provider} →`;
+    activeModalContext.checkoutUrl = sess.provider_checkout_url || sess.payment_gateway_url;
+  }
+
+  async function openPaymentModal(type, item, preselectedIdx = 0) {
+    const nameInput = document.getElementById("m-input-name");
+    const phoneInput = document.getElementById("m-input-phone");
+
+    if (loggedInUser) {
+      if (!nameInput.value) nameInput.value = loggedInUser.name || "";
+      if (!phoneInput.value) phoneInput.value = loggedInUser.phone || "";
+    }
+
+    const offers = item.provider_offers && item.provider_offers.length
+      ? item.provider_offers
+      : [{ provider: "Partner Direct", provider_type: "Checkout", price_inr: item.price_inr || item.price_per_night_inr, url: item.booking_url || "#" }];
+
+    activeModalContext = {
+      type,
+      item,
+      selectedOffer: offers[preselectedIdx] || offers[0],
+    };
+
+    const listEl = document.getElementById("modal-provider-list");
+    listEl.innerHTML = offers.map((o, idx) => `
+      <button type="button" class="provider-opt-card ${idx === preselectedIdx ? 'selected' : ''}" data-idx="${idx}">
+        <div>
+          <div class="po-name">${o.provider}</div>
+          <div class="po-meta">${o.badge || o.provider_type || 'Live Deal'}</div>
+        </div>
+        <div class="po-price">&#8377;${o.price_inr.toLocaleString()}</div>
+      </button>
+    `).join("");
+
+    listEl.querySelectorAll(".provider-opt-card").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        listEl.querySelectorAll(".provider-opt-card").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        activeModalContext.selectedOffer = offers[parseInt(btn.getAttribute("data-idx")) || 0];
+        await refreshBookingSession();
       });
-      const sess = await res.json();
+    });
 
-      document.getElementById("modal-item-title").innerHTML = sess.item_title;
-      document.getElementById("m-sess-id").innerText = sess.session_id;
-
-      const baseFare = item.base_fare_inr > 0 ? item.base_fare_inr : sess.amount_inr;
-      const taxesAmt = item.taxes_inr > 0 ? item.taxes_inr : sess.taxes_inr;
-      document.getElementById("m-base-fare").innerText = `₹${baseFare.toLocaleString()}`;
-      document.getElementById("m-taxes").innerText = `₹${taxesAmt.toLocaleString()}`;
-      document.getElementById("m-conv-fee").innerText = `₹${sess.convenience_fee_inr.toLocaleString()}`;
-      document.getElementById("m-total-amt").innerText =
-        `₹${(item.base_fare_inr > 0 ? item.price_inr + sess.convenience_fee_inr : sess.total_payable_inr).toLocaleString()}`;
-
-      document.getElementById("btn-goto-partner").href = item.booking_url || sess.payment_gateway_url;
-      document.getElementById("btn-goto-payment").href = sess.payment_gateway_url;
-
+    try {
+      await refreshBookingSession();
       document.getElementById("booking-modal").classList.add("open");
     } catch (e) {
       alert("Booking handoff error: " + e.message);
     }
   }
+
+  document.getElementById("btn-proceed-provider").addEventListener("click", async () => {
+    try {
+      await refreshBookingSession();
+      if (activeModalContext.checkoutUrl) {
+        window.open(activeModalContext.checkoutUrl, "_blank", "noopener");
+      }
+    } catch (e) {
+      alert("Checkout handoff failed: " + e.message);
+    }
+  });
 
   document.getElementById("btn-close-modal").addEventListener("click", () => {
     document.getElementById("booking-modal").classList.remove("open");

@@ -1392,9 +1392,10 @@ body {
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
+  max-height: 92vh;
+  overflow-y: auto;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
-  overflow: hidden;
 }
 
 .modal-card.modal-sm {
@@ -1509,6 +1510,167 @@ body {
   text-decoration: none;
   padding: 0.76rem 1rem;
   font-size: 0.86rem;
+}
+
+/* ========================================================================= */
+/* Skyscanner Multi-Provider Strip & Auto-Fill Companion */
+/* ========================================================================= */
+.provider-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.48rem 1.3rem;
+  background: #fbfcfe;
+  border-top: 1px solid #f1f5f9;
+  align-items: center;
+}
+
+.pp-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--nf-muted);
+  margin-right: 0.25rem;
+}
+
+.provider-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #ffffff;
+  border: 1px solid var(--nf-border);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--nf-text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.16s var(--ease-smooth);
+}
+
+.provider-pill:hover {
+  border-color: var(--nf-indigo);
+  background: var(--nf-indigo-light);
+  color: var(--nf-indigo);
+}
+
+.provider-pill.best {
+  border-color: #a7f3d0;
+  background: var(--nf-teal-soft);
+  color: var(--nf-teal);
+}
+
+.provider-section {
+  border: 1px solid var(--nf-border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.provider-section h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--nf-muted);
+  margin-bottom: 0.65rem;
+}
+
+.provider-compare-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.55rem;
+}
+
+.provider-opt-card {
+  border: 1.5px solid var(--nf-border);
+  border-radius: 9px;
+  padding: 0.65rem 0.8rem;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.18s var(--ease-smooth);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.provider-opt-card:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.provider-opt-card.selected {
+  border-color: var(--nf-indigo);
+  background: var(--nf-indigo-light);
+  box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.12);
+}
+
+.po-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--nf-text);
+}
+
+.po-meta {
+  font-size: 0.7rem;
+  color: var(--nf-muted);
+}
+
+.po-price {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--nf-indigo);
+}
+
+.autofill-companion-strip {
+  margin-top: 0.75rem;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+}
+
+.af-copy-txt {
+  font-size: 0.74rem;
+  color: var(--nf-muted);
+  margin-bottom: 0.45rem;
+}
+
+.af-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.af-bookmarklet-pill {
+  background: var(--nf-teal);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.3rem 0.72rem;
+  border-radius: 6px;
+  cursor: grab;
+}
+
+.af-copy-btn {
+  background: #ffffff;
+  border: 1px solid var(--nf-border);
+  border-radius: 6px;
+  padding: 0.28rem 0.68rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--nf-text);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.af-copy-btn:hover {
+  border-color: var(--nf-indigo);
+  color: var(--nf-indigo);
 }
 
 /* ========================================================================= */
