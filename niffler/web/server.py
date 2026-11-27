@@ -39,12 +39,26 @@ class NifflerAPIHandler(http.server.SimpleHTTPRequestHandler):
         path = parsed.path
         qs = urllib.parse.parse_qs(parsed.query)
 
-        # 1. Flight Search API
+        # 1. Flight Search API (Live Web + Gemini 4 Hydrogen Agent)
         if path == "/api/flights":
             orig = qs.get("origin", ["DEL"])[0]
             dest = qs.get("destination", ["BLR"])[0]
             date = qs.get("date", [None])[0]
             direct = qs.get("direct", ["false"])[0].lower() == "true"
+            with_meta = qs.get("with_meta", ["false"])[0].lower() == "true"
+            if with_meta:
+                res = self.flight_radar.search_flights_with_agent(orig, dest, date, direct_only=direct)
+                return self._send_json({
+                    "flights": [f.__dict__ for f in res["flights"]],
+                    "origin": res["origin"],
+                    "destination": res["destination"],
+                    "date": res["date"],
+                    "offers": res["offers"],
+                    "agent_model": res["agent_model"],
+                    "ai_summary": res["ai_summary"],
+                    "best_coupon_tip": res["best_coupon_tip"],
+                    "agent_trace": res["agent_trace"],
+                })
             flights = self.flight_radar.search_flights(orig, dest, date, direct_only=direct)
             return self._send_json([f.__dict__ for f in flights])
 
