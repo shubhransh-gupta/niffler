@@ -1,13 +1,20 @@
 """
-Universal multi-provider LLM interface supporting Gemini, Claude, GPT, DeepSeek, and Ollama.
+Universal multi-provider LLM interface supporting Gemini (including Gemini 4 Hydrogen
+with Google Search Grounding), Claude, GPT, DeepSeek, and Ollama.
 """
 
 import os
 import json
 import time
 import logging
-from typing import Optional, Dict, Any, List
-import requests
+import urllib.request
+import urllib.error
+from typing import Optional, Dict, Any, List, Tuple
+
+try:
+    import requests
+except ImportError:
+    requests = None
 
 logger = logging.getLogger(__name__)
 
@@ -15,13 +22,22 @@ logger = logging.getLogger(__name__)
 class UnifiedLLM:
     """Dispatches prompts to Gemini, Anthropic, OpenAI, DeepSeek, or local Ollama."""
 
+    GEMINI_FALLBACK_CHAIN = [
+        "gemini-4-hydrogen",
+        "gemini-3.5-flash-lite",
+        "gemini-3.5-flash",
+        "gemini-3.8-flash",
+        "gemini-3-flash-preview",
+        "gemini-flash-latest",
+    ]
+
     def __init__(
         self,
         provider: Optional[str] = None,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
-        timeout: int = 30,
+        timeout: int = 25,
     ):
         self.provider, self.model = self._resolve_provider_and_model(provider, model)
         self.api_key = api_key
@@ -47,7 +63,7 @@ class UnifiedLLM:
 
         # Check environment variables
         if os.getenv("GEMINI_API_KEY"):
-            return "gemini", model or "gemini-3-flash-preview"
+            return "gemini", model or "gemini-4-hydrogen"
         if os.getenv("OPENAI_API_KEY"):
             return "openai", model or "gpt-4o"
         if os.getenv("ANTHROPIC_API_KEY"):
@@ -55,17 +71,17 @@ class UnifiedLLM:
         if os.getenv("DEEPSEEK_API_KEY"):
             return "deepseek", model or "deepseek-chat"
 
-        return "gemini", model or "gemini-3-flash-preview"
+        return "gemini", model or "gemini-4-hydrogen"
 
     def _default_model_for_provider(self, provider: str) -> str:
         defaults = {
-            "gemini": "gemini-3-flash-preview",
+            "gemini": "gemini-4-hydrogen",
             "openai": "gpt-4o",
             "anthropic": "claude-3-5-sonnet-20241022",
             "deepseek": "deepseek-chat",
             "ollama": "llama3.2",
         }
-        return defaults.get(provider, "gemini-3-flash-preview")
+        return defaults.get(provider, "gemini-4-hydrogen")
 
     def _resolve_api_key(self):
         if self.api_key:
@@ -80,50 +96,99 @@ class UnifiedLLM:
         if env_var:
             self.api_key = os.getenv(env_var)
 
-    def generate(self, prompt: str, system_instruction: Optional[str] = None) -> str:
+    def _post_json(self, url: str, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None) -> Tuple[int, str]:
+        hdrs = {"Content-Type": "application/json"}
+        if headers:
+            hdrs.update(headers)
+        if requests is not None:
+            resp = requests.post(url, json=payload, headers=hdrs, timeout=self.timeout)
+            return resp.status_code, resp.text
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=hdrs, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as r:
+                return r.status, r.read().decode("utf-8", errors="ignore")
+        except urllib.error.HTTPError as e:
+            return e.code, e.read().decode("utf-8", errors="ignore")
+
+    def generate(self, prompt: str, system_instruction: Optional[str] = None, use_google_search: bool = False) -> str:
         """Generate response via configured provider."""
         if self.provider == "gemini":
-            return self._call_gemini(prompt, system_instruction)
+            text, _ = self._call_gemini(prompt, system_instruction, use_google_search=use_google_search)
+            return text
         elif self.provider == "anthropic":
             return self._call_anthropic(prompt, system_instruction)
         elif self.provider in ("openai", "deepseek", "ollama") or self.base_url:
             return self._call_openai_compatible(prompt, system_instruction)
         else:
-            return self._call_gemini(prompt, system_instruction)
+            text, _ = self._call_gemini(prompt, system_instruction, use_google_search=use_google_search)
+            return text
 
-    def _call_gemini(self, prompt: str, system_instruction: Optional[str]) -> str:
-        models_to_try = [
-            self.model,
-            "gemini-3.1-flash-lite-preview",
-            "gemini-3-flash-preview",
-            "gemini-flash-latest",
-        ]
-        unique_models = [m for m in dict.fromkeys(models_to_try) if m]
+    def generate_with_search(
+        self, prompt: str, system_instruction: Optional[str] = None, use_google_search: bool = True
+    ) -> Dict[str, Any]:
+        """Generate response returning text, model used, and any Google Search grounding metadata."""
+        if self.provider != "gemini":
+            return {"text": self.generate(prompt, system_instruction), "model": self.model, "grounding": {}}
+        text, meta = self._call_gemini(prompt, system_instruction, use_google_search=use_google_search)
+        return {"text": text, "model": meta.get("model", self.model), "grounding": meta.get("grounding", {})}
 
+    def _call_gemini(
+        self, prompt: str, system_instruction: Optional[str], use_google_search: bool = False
+    ) -> Tuple[str, Dict[str, Any]]:
+        if not self.api_key:
+            raise RuntimeError("GEMINI_API_KEY is not configured.")
+
+        models_to_try = list(dict.fromkeys([m for m in [self.model] + self.GEMINI_FALLBACK_CHAIN if m]))
+
+        # Try search-grounded call first if requested; fall back to ungrounded call if search tool is quota-blocked.
+        search_modes = [True, False] if use_google_search else [False]
         last_error = None
-        for m in unique_models:
-            for retry in range(2):
-                try:
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
-                    contents = []
-                    if system_instruction:
-                        contents.append({"role": "user", "parts": [{"text": f"SYSTEM: {system_instruction}"}]})
-                    contents.append({"role": "user", "parts": [{"text": prompt}]})
-                    resp = requests.post(url, json={"contents": contents}, timeout=self.timeout)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        candidates = data.get("candidates", [])
-                        if candidates and "content" in candidates[0]:
-                            parts = candidates[0]["content"].get("parts", [])
-                            if parts and "text" in parts[0]:
-                                return parts[0]["text"]
-                    elif resp.status_code in (503, 429):
-                        time.sleep(2)
-                        continue
-                    last_error = f"{m} HTTP {resp.status_code}: {resp.text[:100]}"
+
+        for with_search in search_modes:
+            search_quota_blocked = False
+            for m in models_to_try:
+                if search_quota_blocked:
                     break
-                except Exception as e:
-                    last_error = e
+                for retry in range(2):
+                    try:
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+                        payload: Dict[str, Any] = {
+                            "contents": [{"role": "user", "parts": [{"text": prompt}]}]
+                        }
+                        if system_instruction:
+                            payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+                        if with_search:
+                            payload["tools"] = [{"google_search": {}}]
+
+                        status, body = self._post_json(url, payload)
+                        if status == 200:
+                            data = json.loads(body)
+                            candidates = data.get("candidates", [])
+                            if candidates and "content" in candidates[0]:
+                                parts = candidates[0]["content"].get("parts", [])
+                                text = "".join(p.get("text", "") for p in parts if "text" in p)
+                                if text:
+                                    return text, {
+                                        "model": m,
+                                        "grounding": candidates[0].get("groundingMetadata", {}),
+                                        "search_grounded": with_search,
+                                    }
+                        elif status in (503, 429):
+                            last_error = f"{m} (search={with_search}) HTTP {status}: {body[:160]}"
+                            if with_search and status == 429:
+                                # Search grounding quota exhausted for this key; skip to ungrounded immediately
+                                search_quota_blocked = True
+                                break
+                            if retry == 0 and status == 503:
+                                time.sleep(0.4)
+                                continue
+                            break
+                        else:
+                            last_error = f"{m} (search={with_search}) HTTP {status}: {body[:160]}"
+                            break
+                    except Exception as e:
+                        last_error = e
+                        break
 
         raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
 
@@ -134,7 +199,7 @@ class UnifiedLLM:
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         }
-        payload = {
+        payload: Dict[str, Any] = {
             "model": self.model,
             "max_tokens": 4096,
             "messages": [{"role": "user", "content": prompt}],
@@ -142,10 +207,10 @@ class UnifiedLLM:
         if system_instruction:
             payload["system"] = system_instruction
 
-        resp = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
-        resp.raise_for_status()
-        data = resp.json()
-        return data["content"][0]["text"]
+        status, body = self._post_json(url, payload, headers=headers)
+        if status >= 400:
+            raise RuntimeError(f"Anthropic HTTP {status}: {body[:200]}")
+        return json.loads(body)["content"][0]["text"]
 
     def _call_openai_compatible(self, prompt: str, system_instruction: Optional[str]) -> str:
         base = self.base_url
@@ -167,11 +232,8 @@ class UnifiedLLM:
             messages.append({"role": "system", "content": system_instruction})
         messages.append({"role": "user", "content": prompt})
 
-        payload = {
-            "model": self.model,
-            "messages": messages,
-        }
-        resp = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"]
+        payload = {"model": self.model, "messages": messages}
+        status, body = self._post_json(url, payload, headers=headers)
+        if status >= 400:
+            raise RuntimeError(f"{self.provider} HTTP {status}: {body[:200]}")
+        return json.loads(body)["choices"][0]["message"]["content"]
