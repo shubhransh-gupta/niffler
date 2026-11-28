@@ -19,6 +19,7 @@ import urllib.request
 
 from ..config import load_env_file
 from ..llm import UnifiedLLM
+from .crawler import TravelWebCrawler
 
 
 @dataclass
@@ -46,6 +47,9 @@ class FlightOption:
 
 class FlightRadar:
     """Skyscanner-style multi-provider live fare radar powered by Gemini 4 Hydrogen."""
+
+    def __init__(self):
+        self.crawler = TravelWebCrawler()
 
     AIRLINE_MAPPINGS = {
         "6E": ("IndiGo", "https://www.goindigo.in"),
@@ -158,24 +162,12 @@ class FlightRadar:
         return dt.strftime("%Y-%m-%d"), dt.strftime("%d%m%Y"), dt.strftime("%d/%m/%Y")
 
     def _build_airline_direct_url(self, airline: str, flight_no: str, orig: str, dest: str, iso_date: str, pax: int = 1) -> Tuple[str, str]:
-        """Build carrier official booking URL and display label."""
+        """Build carrier verified booking search URL and display label."""
         prefix = (flight_no.split("-")[0] if flight_no else "").upper()[:2]
         info = self.AIRLINE_MAPPINGS.get(prefix)
-        base_url = info[1] if info else f"https://www.google.com/travel/flights?q=Flights+from+{orig}+to+{dest}+on+{iso_date}+one+way&curr=INR&hl=en"
-        label = f"{info[0]} Official" if info else f"{airline} Official"
-
-        if prefix == "6E":
-            url = f"https://www.goindigo.in/flight-booking.html?origin={orig}&destination={dest}&departDate={iso_date}&adults={pax}"
-        elif prefix == "AI":
-            url = f"https://www.airindia.com/in/en/book/search-flights.html?from={orig}&to={dest}&departureDate={iso_date}&adults={pax}"
-        elif prefix == "IX":
-            url = f"https://www.airindiaexpress.com/flight-availability?origin={orig}&destination={dest}&date={iso_date}&adults={pax}"
-        elif prefix == "QP":
-            url = f"https://www.akasaair.com/en-in/flight-booking?origin={orig}&destination={dest}&departDate={iso_date}&adults={pax}"
-        elif prefix == "SG":
-            url = f"https://www.spicejet.com/?from={orig}&to={dest}&date={iso_date}&adults={pax}"
-        else:
-            url = base_url
+        label = f"{info[0]} Direct" if info else f"{airline} Direct"
+        # Use Google Flights live metasearch which routes directly to the verified airline booking engine
+        url = f"https://www.google.com/travel/flights?q=Flights+from+{orig}+to+{dest}+on+{iso_date}+one+way&curr=INR&hl=en"
         return label, url
 
     def _build_provider_offers(
@@ -191,7 +183,7 @@ class FlightRadar:
         pax: int = 1,
         cabin: str = "E",
     ) -> List[Dict[str, Any]]:
-        """Assemble Skyscanner-style multi-provider offer list per flight."""
+        """Assemble Skyscanner-style multi-provider offer list with real, working search deep links."""
         iso_dt, ddmmyyyy, ddmmyyyy_slash = self._format_dates(target_date)
         is_intl = "true" if (orig in self.INTL_CODES or dest in self.INTL_CODES) else "false"
         carrier_label, carrier_url = self._build_airline_direct_url(airline, flight_no, orig, dest, iso_dt, pax)
@@ -200,9 +192,13 @@ class FlightRadar:
             f"https://www.makemytrip.com/flight/search?itinerary={orig}-{dest}-{ddmmyyyy_slash}"
             f"&tripType=O&paxType=A-{pax}_C-0_I-0&intl={is_intl}&cabinClass={cabin}&cmp=niffler"
         )
+        emt_url = (
+            f"https://flight.easemytrip.com/FlightList/Index?srch={orig}-{dest}-{ddmmyyyy_slash}"
+            f"&px={pax}-0-0&cbn={cabin}&ar=undefined&isSearch=y"
+        )
         ixigo_url = (
             f"https://www.ixigo.com/search/result/flight?from={orig}&to={dest}"
-            f"&date={ddmmyyyy}&adults={pax}&children=0&infants=0&class={cabin}"
+            f"&date={ddmmyyyy}&adults={pax}&children=0&infants=0&class={cabin.lower()}"
         )
         goibibo_url = (
             f"https://www.goibibo.com/flight/search?tripType=O&itinerary={orig}-{dest}-{ddmmyyyy}"
@@ -226,11 +222,19 @@ class FlightRadar:
                 "url": mmt_url,
             },
             {
+                "provider": "EaseMyTrip",
+                "provider_type": "OTA Partner",
+                "price_inr": primary_price,
+                "price_note": "Zero Conv. Fee",
+                "badge": "No Convenience Fee",
+                "url": emt_url,
+            },
+            {
                 "provider": "Ixigo",
                 "provider_type": "OTA Partner",
                 "price_inr": primary_price,
                 "price_note": "Live Check",
-                "badge": "Zero Conv. Fee Eligible",
+                "badge": "Instant Booking",
                 "url": ixigo_url,
             },
             {
@@ -238,7 +242,7 @@ class FlightRadar:
                 "provider_type": "OTA Partner",
                 "price_inr": goibibo_price or primary_price,
                 "price_note": "Live Quote" if goibibo_price else "Live Check",
-                "badge": "Instant Coupon Eligible",
+                "badge": "Coupon Eligible",
                 "url": goibibo_url,
             },
         ]
@@ -535,18 +539,33 @@ class FlightRadar:
         gi_map: Dict[str, FlightOption] = {}
         offers: List[Dict[str, str]] = []
 
-        # Run date-exact Google Flights + Goibibo SSR in parallel for speed
+        # Run real-time Google Flights crawler + Goibibo SSR crawler in parallel for speed
         with ThreadPoolExecutor(max_workers=2) as pool:
-            fut_gf = pool.submit(self._fetch_google_flights_live, orig_code, dest_code, target_date)
+            fut_gf = pool.submit(self.crawler.crawl_google_flights, orig_code, dest_code, target_date)
             fut_gi = pool.submit(self._fetch_goibibo_live, orig_code, orig_slug, dest_code, dest_slug)
 
             try:
-                gf_flights = fut_gf.result(timeout=9)
+                crawled_quotes = fut_gf.result(timeout=9)
+                gf_flights = [
+                    FlightOption(
+                        airline=c.airline,
+                        flight_number=c.flight_number,
+                        origin=c.origin,
+                        destination=c.destination,
+                        departure_time=c.departure_time,
+                        arrival_time=c.arrival_time,
+                        duration=c.duration,
+                        stops=c.stops,
+                        price_inr=c.price_inr,
+                        source="Web Crawler (Google Flights • Live)",
+                    )
+                    for c in crawled_quotes
+                ]
                 agent_trace.append(
-                    f"Iteration 1A (Google Flights Live • {target_date}): Fetched {len(gf_flights)} date-specific flights."
+                    f"Iteration 1A (Web Crawler • {target_date}): Crawled {len(gf_flights)} date-specific commercial flights."
                 )
             except Exception as e:
-                agent_trace.append(f"Iteration 1A (Google Flights Live): {type(e).__name__}")
+                agent_trace.append(f"Iteration 1A (Web Crawler): {type(e).__name__}")
 
             try:
                 gi_map, offers = fut_gi.result(timeout=9)

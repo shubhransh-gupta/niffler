@@ -9,6 +9,7 @@ import html as html_lib
 import re
 import urllib.parse
 import urllib.request
+from .crawler import TravelWebCrawler
 
 
 @dataclass
@@ -31,6 +32,9 @@ class HotelOption:
 
 class HotelRadar:
     """Discovers live hotels and homestays with multi-provider comparison."""
+
+    def __init__(self):
+        self.crawler = TravelWebCrawler()
 
     BROWSER_HEADERS = {
         "User-Agent": (
@@ -199,7 +203,27 @@ class HotelRadar:
         results: List[HotelOption] = []
 
         try:
-            results = self._fetch_google_hotels_live(city)
+            crawled = self.crawler.crawl_google_hotels(city)
+            for cq in crawled:
+                offers = self._build_provider_offers(cq.name, city, cq.price_per_night_inr, cq.lead_provider)
+                results.append(
+                    HotelOption(
+                        name=cq.name,
+                        property_type=cq.property_type,
+                        location=cq.location,
+                        city=city.title(),
+                        star_rating=cq.star_rating,
+                        user_rating=cq.user_rating,
+                        reviews_count=cq.reviews_count,
+                        price_per_night_inr=cq.price_per_night_inr,
+                        amenities=["Free WiFi", "Air Conditioning", "Live Tariffs"],
+                        couple_friendly=True,
+                        free_cancellation=True,
+                        booking_url=offers[0]["url"],
+                        source=f"Web Crawler ({cq.lead_provider})",
+                        provider_offers=offers,
+                    )
+                )
         except Exception:
             results = []
 

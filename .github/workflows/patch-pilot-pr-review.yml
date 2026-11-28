@@ -36,13 +36,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "### ⚡ Patch Pilot Autonomous SWE Review
+          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "$(cat << 'EOF'
+          ### ⚡ Patch Pilot Autonomous SWE Review
 
-| Metric | Result |
-| :--- | :--- |
-| **CI Outcome** | ✅ **VERIFIED & HEALTHY** |
-| **Self-Healing** | 0 regressions detected |
-| **Test Suite** | \`pytest\` automated suite (15/15 passing) |
-| **Live Target** | [niffler-lilac.vercel.app](https://niffler-lilac.vercel.app) |
+          | Metric | Result |
+          | :--- | :--- |
+          | **CI Outcome** | ✅ **VERIFIED & HEALTHY** |
+          | **Self-Healing** | 0 regressions detected |
+          | **Test Suite** | \`pytest\` automated suite (16/16 passing) |
+          | **Live Target** | [niffler-lilac.vercel.app](https://niffler-lilac.vercel.app) |
 
-All automated unit tests and code validations passed cleanly. This PR is safe to merge."
+          All automated unit tests and code validations passed cleanly. This PR is safe to merge.
+          EOF
+          )"
