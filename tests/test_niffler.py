@@ -187,3 +187,13 @@ def test_travel_web_crawler_and_providers():
     assert "Ixigo" in providers
     assert "Goibibo" in providers
 
+
+def test_irctc_tatkal_opening_window():
+    radar = IRCTCRadar()
+    win = radar.calculate_tatkal_window("2026-12-25")
+    assert win["journey_date"] == "2026-12-25"
+    assert win["booking_date"] == "2026-12-24"
+    assert "10:00:00" in win["ac_opens_at"]
+    assert "11:00:00" in win["non_ac_opens_at"]
+
+
