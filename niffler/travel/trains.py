@@ -96,3 +96,23 @@ class IRCTCRadar:
                 "3. Maximum 4 passengers permitted per Tatkal PNR."
             )
         }
+
+    def calculate_tatkal_window(self, travel_date: Optional[str] = None) -> Dict[str, Any]:
+        """Calculates exact date and time when Tatkal opens for a given journey date."""
+        try:
+            if travel_date:
+                jdt = datetime.datetime.strptime(travel_date, "%Y-%m-%d").date()
+            else:
+                jdt = datetime.date.today() + datetime.timedelta(days=2)
+        except Exception:
+            jdt = datetime.date.today() + datetime.timedelta(days=2)
+
+        booking_date = jdt - datetime.timedelta(days=1)
+        return {
+            "journey_date": jdt.isoformat(),
+            "booking_date": booking_date.isoformat(),
+            "ac_opens_at": f"{booking_date.isoformat()} 10:00:00 IST",
+            "non_ac_opens_at": f"{booking_date.isoformat()} 11:00:00 IST",
+            "is_ac_open_now": False,
+            "status_badge": "Opens 1 Day Prior at 10 AM",
+        }
