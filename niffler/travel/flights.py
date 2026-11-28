@@ -124,7 +124,7 @@ class FlightRadar:
     }
 
     def _resolve_city_slug_and_iata(self, query: str) -> Tuple[str, str, str]:
-        q = query.strip()
+        q = str(query or "").strip()
         upper = q.upper()
         if upper in self.AIRPORT_INFO:
             name, slug = self.AIRPORT_INFO[upper]
@@ -132,7 +132,8 @@ class FlightRadar:
 
         low = q.lower()
         for code, (name, slug) in self.AIRPORT_INFO.items():
-            if low == slug or low in name.lower():
+            if low == slug or low in name.lower() or low == code.lower():
+                return code, name, slug
                 return code, name, slug
 
         try:
@@ -184,6 +185,8 @@ class FlightRadar:
         cabin: str = "E",
     ) -> List[Dict[str, Any]]:
         """Assemble Skyscanner-style multi-provider offer list with real, working search deep links."""
+        orig = str(orig or "").strip().upper()
+        dest = str(dest or "").strip().upper()
         iso_dt, ddmmyyyy, ddmmyyyy_slash = self._format_dates(target_date)
         is_intl = "true" if (orig in self.INTL_CODES or dest in self.INTL_CODES) else "false"
         carrier_label, carrier_url = self._build_airline_direct_url(airline, flight_no, orig, dest, iso_dt, pax)

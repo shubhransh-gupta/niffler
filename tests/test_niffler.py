@@ -197,3 +197,16 @@ def test_irctc_tatkal_opening_window():
     assert "11:00:00" in win["non_ac_opens_at"]
 
 
+def test_flight_radar_iata_case_insensitivity():
+    radar = FlightRadar()
+    # Test lowercase and space trimmed IATA normalization
+    code_del, name_del, slug_del = radar._resolve_city_slug_and_iata(" del ")
+    assert code_del == "DEL"
+    assert "Delhi" in name_del
+
+    code_bom, name_bom, slug_bom = radar._resolve_city_slug_and_iata("bom")
+    assert code_bom == "BOM"
+    assert "Mumbai" in name_bom
+
+
+
